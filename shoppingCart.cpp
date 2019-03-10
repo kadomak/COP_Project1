@@ -33,13 +33,13 @@ struct Product{ int itemNo; string description; double price; };
 int main()
 {
     
-    string str, tempSTR;
-    int Length = 21;
+    string str, tempSTR; //used to read in the data
+    int Length = 21; //size of the array
     
     //Creating the array and vectors
     Customer CustList[Length];
-    vector<string> tempCust;
-    vector<string> tempAdd;
+    vector<string> tempCust; //temporary vector used in parsing the customer data
+    vector<string> tempAdd; //temporary vector used in parsing the address data
     vector<Address> AddList;
 
     
@@ -57,27 +57,20 @@ int main()
         CustList[i].lineOfCredit = atof(tempCust[2].c_str());  //converting the type from string to double
         tempSTR = tempCust[3];
         
-        tempAdd = parse(tempSTR, ',');
-        //AddList[i].streetAddress = tempAdd[0]; //issue filling in vector
-        /*AddList[i].city = tempAdd[1]; 
+        tempAdd = parse(tempSTR, ','); //vector of addresses parsed by the ,
+        AddList.push_back(Address()); //pushes back the entries to fill the vector of structs
+        AddList[i].streetAddress = tempAdd[0]; 
+        AddList[i].city = tempAdd[1]; 
         AddList[i].state = tempAdd[2];
-        AddList[i].zipCode= tempAdd[3];  */     
+        AddList[i].zipCode= tempAdd[3];       
     }
     
     
-    for (int i = 0; i<Length; i++)
+    /*for (int i = 0; i<Length; i++)
     {
-        cout << CustList[i].customerNum << " " << CustList[i].customerName << " " << CustList[i].lineOfCredit << endl; //AddList[i].streetAddress << " " <<
-            //AddList[i].city << " " << AddList[i].state << " " << AddList[i].zipCode << endl; 
-    } 
-    
-    
-    
-    
-    
- 
-        
-    
+        cout << CustList[i].customerNum << " " << CustList[i].customerName << " " << CustList[i].lineOfCredit << " " <<AddList[i].streetAddress << " " <<
+            AddList[i].city << " " << AddList[i].state << " " << AddList[i].zipCode << endl; 
+    } */ //testing to see if the vector and array are filled 
     
     return 0;
 }
