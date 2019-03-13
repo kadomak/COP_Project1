@@ -29,90 +29,47 @@ struct Product{ int itemNo; string description; double price; };
 
 //Function prototypes
 vector<string> parse(string line, char delimiter);
+void CustomerDataInput(string file, Customer CustList[],vector<Address>&AddList, int Length);
+void InventoryDataInput(string file,Product ProdList[],int Length);
 string generateOrderNum();
-void selectionSort(Customer array[], Address *aPtr, int Length);
+void selectionSort(Customer array[],vector<Address>&AddList, int Length);
 void orderSummary();
 void menu();
 
 
 int main()
 {  
-    string str, tempSTR; //used to read in the data
+    //Variables
+    string customerData = "customers.dat";
+    string inventoryData = "inventory.dat";
     int Length = 21; //size of the array
     
     //Creating the array and vectors
     Customer CustList[Length];
-    Address Addresses[Length];
-    CustList->corperateAddress = Addresses; //creating a pointer to the array of address structs
-    Product ProdList[(Length-1)];
-    vector<string> tempCust; //temporary vector used in parsing the customer data
-    vector<string> tempProd; //temprorary vector used in parsing the inventory data
-    vector<string> tempAdd; //temporary vector used in parsing the address data
     vector<Address> AddList;
+    Product ProdList[(Length-1)];
     
+    //Opening files and reading in the data
+    CustomerDataInput(customerData,CustList,AddList,Length);
+    InventoryDataInput(inventoryData,ProdList,Length);
     
-    //Opening the file
-    ifstream Filename;
-    Filename.open("customers.dat");
+    //Sorting the data
+    selectionSort(CustList, AddList,Length);
     
-    //Reading in the customer data
-    for (int i= 0; i < Length; i++)
-    {
-        getline(Filename,str); //reads in entire line
-        tempCust = parse(str, '|'); //vector of line parsed by the |
-        CustList[i].customerNum = tempCust[0];  //indexing the vector to fill in the array of structs
-        CustList[i].customerName = tempCust[1]; 
-        CustList[i].lineOfCredit = atof(tempCust[2].c_str());  //converting the type from string to double
-        tempSTR = tempCust[3];
-        
-        tempAdd = parse(tempSTR, ','); //vector of addresses parsed by the ,
-        AddList.push_back(Address()); //pushes back the entries to fill the vector of structs
-        AddList[i].streetAddress = tempAdd[0]; 
-        AddList[i].city = tempAdd[1]; 
-        AddList[i].state = tempAdd[2];
-        AddList[i].zipCode= tempAdd[3]; 
-        
-        Addresses[i].streetAddress = AddList[i].streetAddress; //filling array with data
-        Addresses[i].city= AddList[i].city; 
-        Addresses[i].state = AddList[i].state;
-        Addresses[i].zipCode =AddList[i].zipCode;
-    }
-    Filename.close(); //closing the file
-    
-    //Opening the inventory file
-    Filename.open("inventory.dat");
-    
-    //Reading in the inventory data
-    for (int i= 0; i < (Length-1); i++)
-    {
-        getline(Filename,str); //reads in entire line
-        tempProd = parse(str, ','); //vector of line parsed by the ,
-        
-        //indexing the vector to fill in the array of structs
-        ProdList[i].itemNo = atoi(tempProd[0].c_str());  // converting the type from string to int
-        ProdList[i].description = tempProd[1]; 
-        ProdList[i].price = atof(tempProd[2].c_str());  //converting the type from string to double           
-    }
-    Filename.close(); //closing the file
-    
-    //selection sorts by numerical ascending order for the address & customer arrays
-    selectionSort(CustList, Addresses,Length);
+    menu();
     
     
     //checks to see if results are entered or sorted correctly
     /*for (int i = 0; i< Length; i++)
     {  
-        cout << CustList[i].customerNum << " " << CustList[i].customerName << " " << CustList[i].lineOfCredit << " "<< Addresses[i].streetAddress << " " <<
-            Addresses[i].city << " " << Addresses[i].state << " " << Addresses[i].zipCode << endl; 
-    } */ 
-    
-    menu();
+        cout << CustList[i].customerNum << " " << CustList[i].customerName << " " << CustList[i].lineOfCredit << " "<< CustList[i].corperateAddress << " " <<AddList[i].streetAddress << " " <<
+            AddList[i].city << " " << AddList[i].state << " " << AddList[i].zipCode << endl; 
+    } */
     return 0;
 }
 
 
 //Function definitions
-
 /**************************************************************
  *                             parse                          *
  * Called by: <fill in>                                       *
@@ -136,6 +93,72 @@ vector<string> parse(string line, char delimiter){
     return parsedLine;
 }
 
+void CustomerDataInput(string file, Customer CustList[],vector<Address>&AddList, int Length)
+{
+    //Temporary strings & vectors used in parsing
+    vector<string> tempCust; 
+    vector<string> tempAdd; 
+    string str, tempSTR;
+    
+    //Opening the file
+    ifstream Filename;
+    Filename.open(file.c_str());
+    
+    //Reading in the customer data
+    for (int i= 0; i < Length; i++)
+    {
+        getline(Filename,str); //reads in entire line
+        tempCust = parse(str, '|'); //vector of line parsed by the |
+        CustList[i].customerNum = tempCust[0];  //indexing the vector to fill in the array of structs
+        CustList[i].customerName = tempCust[1]; 
+        CustList[i].lineOfCredit = atof(tempCust[2].c_str());  //converting the type from string to double
+        tempSTR = tempCust[3];
+        
+        tempAdd = parse(tempSTR, ','); //vector of addresses parsed by the ,
+        AddList.push_back(Address()); //pushes back the entries to fill the vector of structs
+        AddList[i].streetAddress = tempAdd[0]; 
+        AddList[i].city = tempAdd[1]; 
+        AddList[i].state = tempAdd[2];
+        AddList[i].zipCode= tempAdd[3]; 
+    }
+    
+       //Reading in addresses- fix so there is unique address if not in vector
+       vector<Address>::iterator ITERATOR = AddList.begin();
+       for (int i = 0; i<Length; i++)
+       { 
+           CustList[i].corperateAddress = &(*(ITERATOR+i));
+       } 
+    
+    Filename.close();
+}
+
+void InventoryDataInput(string file,Product ProdList[],int Length)
+{
+    //Temporary vectors & strings used in parsing
+    string str;
+    vector<string> tempProd;
+    
+    
+    //Opening the file
+    ifstream Filename;
+    Filename.open(file.c_str());
+    
+    //Reading in the inventory data
+    for (int i= 0; i < (Length-1); i++)
+    {
+        getline(Filename,str); //reads in entire line
+        tempProd = parse(str, ','); //vector of line parsed by the ,
+        
+        //indexing the vector to fill in the array of structs
+        ProdList[i].itemNo = atoi(tempProd[0].c_str());  // converting the type from string to int
+        ProdList[i].description = tempProd[1]; 
+        ProdList[i].price = atof(tempProd[2].c_str());  //converting the type from string to double           
+    }
+    
+    //Closing the file
+    Filename.close();
+}
+
 /**************************************************************
  *                  generateOrderNum                          *
  * Called by: <fill in>                                       *                                       *
@@ -155,11 +178,12 @@ string generateOrderNum(){
 }
 
 
-void selectionSort(Customer array[], Address *aPtr, int Length) //fix this
+void selectionSort(Customer array[],vector<Address>&AddList, int Length)
 {
     int start, minIndex;
     double minCredit;
     string minVal, minName, minStreet, minCity, minState, minZip;
+    Address * minAddress;
     
     for (start =0; start <(Length-1); start++)
     {
@@ -167,11 +191,12 @@ void selectionSort(Customer array[], Address *aPtr, int Length) //fix this
         minVal = array[start].customerNum;
         minName =array[start].customerName;
         minCredit = array[start].lineOfCredit;
+        minAddress = array[start].corperateAddress;
         
-        minStreet = aPtr[start].streetAddress; //using pointers to access Addresses
-        minCity = aPtr[start].city;
-        minState = aPtr[start].state;
-        minZip = aPtr[start].zipCode; 
+        minStreet = AddList[start].streetAddress; //using pointers to access Addresses
+        minCity = AddList[start].city;
+        minState = AddList[start].state;
+        minZip = AddList[start].zipCode; 
         
         
         for (int index = (start+1); index <Length; index++)
@@ -181,11 +206,12 @@ void selectionSort(Customer array[], Address *aPtr, int Length) //fix this
                 minVal = array[index].customerNum;
                 minName = array[index].customerName;
                 minCredit= array[index].lineOfCredit;
+                minAddress = array[index].corperateAddress;
                 
-                minStreet = aPtr[index].streetAddress;
-                minCity = aPtr[index].city;
-                minState = aPtr[index].state;
-                minZip = aPtr[index].zipCode; 
+                minStreet = AddList[index].streetAddress;
+                minCity = AddList[index].city;
+                minState = AddList[index].state;
+                minZip = AddList[index].zipCode; 
                 
                 minIndex = index;
             }
@@ -194,21 +220,22 @@ void selectionSort(Customer array[], Address *aPtr, int Length) //fix this
         array[minIndex].customerNum = array[start].customerNum;
         array[minIndex].customerName = array[start].customerName;
         array[minIndex].lineOfCredit = array[start].lineOfCredit;
-        aPtr[minIndex].streetAddress = aPtr[start].streetAddress;
-        aPtr[minIndex].city = aPtr[start].city;
-        aPtr[minIndex].state = aPtr[start].state;
-        aPtr[minIndex].zipCode = aPtr[start].zipCode;
+        array[minIndex].corperateAddress = array[start].corperateAddress;
+        AddList[minIndex].streetAddress = AddList[start].streetAddress;
+        AddList[minIndex].city = AddList[start].city;
+        AddList[minIndex].state = AddList[start].state;
+        AddList[minIndex].zipCode = AddList[start].zipCode;
         
         array[start].customerNum = minVal;
         array[start].customerName = minName;
         array[start].lineOfCredit = minCredit; 
-        aPtr[start].streetAddress = minStreet;
-        aPtr[start].city = minCity;
-        aPtr[start].state = minState;
-        aPtr[start].zipCode = minZip;
-    }
-    
-}
+        array[start].corperateAddress = minAddress;
+        AddList[start].streetAddress = minStreet;
+        AddList[start].city = minCity;
+        AddList[start].state = minState;
+        AddList[start].zipCode = minZip;
+    }  
+} 
 
 void orderSummary()
 {
@@ -217,21 +244,23 @@ void orderSummary()
     string orderNum = generateOrderNum();
     FileHandle.open(orderNum.c_str());
     
-    //FileHandle << "This is the result of the order. Order number: " << orderNum;
-    
     FileHandle<< string(60,'-') << endl << "B2B Shopping Cart" << endl << string(60,'-') << endl;
     FileHandle << "\nOrder Number: " << orderNum << "\nAssociate: " << endl;
+    FileHandle << "Customer Number: \nCustomer: \nAddress: "<<endl;
     //fill in the remainding
     //
     
-    FileHandle << string(60,'-') << endl << setw(20) << left << "Item No" << setw(20) << left<< "Description" << setw(20)
-        << left << "Qty" << setw(10) << left << "Total" << endl << string(60,'-');
+    FileHandle << string(60,'-') << endl << setw(20) << left << "Item No" << setw(20) << left<< "Description" << setw(15)
+        << left << "Qty" << setw(5) << "Total" << endl << string(60,'-') << endl;
     
     
    /* for (int i = 0; i < num; i++) //prints the number of items
     {
       cout << setw(20) << left << //insertItem << setw(10) << left << insertItem << setw(4) << insertItem<< endl;  
     }*/
+    
+    FileHandle << string(60,'-') << endl << setw(20) << left << "Total "<<endl << string(60,'-') << endl;
+    FileHandle << setw(20) << left << "Remaining Credit " << endl;
     
 }
 
@@ -243,14 +272,14 @@ void menu()
     string nameSearch, userName;
     int numSearch;
     
-    //prompt
+    //prompt-issue with entering name during second iteration
     cout << "Welcome to the B2B Shopping Cart! " << endl << "Please enter your name: ";
     getline(cin, userName);
     cout << "Hello " << userName << ". If you are searching by name enter 'A' or if you are searching by number enter 'B'" << endl;
     cout << "A or B? : ";
     cin >> response;
     
-    //error checking
+    //Error checking
     while (toupper(response) != 'A' && toupper(response) != 'B')
     {
         cout << "Invalid response. Please enter either A or B: ";
