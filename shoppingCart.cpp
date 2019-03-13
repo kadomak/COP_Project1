@@ -126,7 +126,7 @@ void CustomerDataInput(string file, Customer CustList[],vector<Address>&AddList,
        vector<Address>::iterator ITERATOR = AddList.begin();
        for (int i = 0; i<Length; i++)
        { 
-           CustList[i].corperateAddress = &(*(ITERATOR+i));
+           CustList[i].corperateAddress = &(*(ITERATOR+i));      
        } 
     
     Filename.close();
