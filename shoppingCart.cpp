@@ -22,10 +22,13 @@
 #include <iomanip>
 using namespace std;
 
+
 //Creating structures
 struct Address{ string streetAddress; string city; string state; string zipCode; };
 struct Customer{ string customerNum; string customerName; double lineOfCredit; Address * corperateAddress; };
 struct Product{ int itemNo; string description; double price; };
+struct Cart{Product item; int quantity; double total;};
+vector<Cart> ShoppingCart;
 
 //Function prototypes
 vector<string> parse(string line, char delimiter);
@@ -33,13 +36,19 @@ void CustomerDataInput(string file, Customer CustList[],vector<Address>&AddList,
 void InventoryDataInput(string file,Product ProdList[],int Length);
 string generateOrderNum();
 void selectionSort(Customer array[],vector<Address>&AddList, int Length);
-void orderSummary();
-void menu();
+int binarySearch(Customer array[], int low, int high, string key);
+int linearSearch(Customer array[], int size, string name);
+int linearSearchProduct(Product array[], int size, int name);
+void creditChecker(Customer array[], int pos, Product Array[], int Size, vector<Cart>&shoppingList);
+void orderSummary(string name, Customer array[],vector<Address>&AddList, int pos);
+void menu(Customer array[],Product Array[], vector<Address>&vector,int &size);
+
 
 
 int main()
 {  
     //Variables
+    string str = "";
     string customerData = "customers.dat";
     string inventoryData = "inventory.dat";
     int Length = 21; //size of the array
@@ -54,17 +63,10 @@ int main()
     InventoryDataInput(inventoryData,ProdList,Length);
     
     //Sorting the data
-    selectionSort(CustList, AddList,Length);
+    selectionSort(CustList, AddList, Length);
     
-    menu();
-    
-    
-    //checks to see if results are entered or sorted correctly
-    /*for (int i = 0; i< Length; i++)
-    {  
-        cout << CustList[i].customerNum << " " << CustList[i].customerName << " " << CustList[i].lineOfCredit << " "<< CustList[i].corperateAddress << " " <<AddList[i].streetAddress << " " <<
-            AddList[i].city << " " << AddList[i].state << " " << AddList[i].zipCode << endl; 
-    } */
+    //menu
+    menu(CustList,ProdList,AddList,Length);     
     return 0;
 }
 
@@ -93,6 +95,7 @@ vector<string> parse(string line, char delimiter){
     return parsedLine;
 }
 
+//reads the file and fills the vector and array
 void CustomerDataInput(string file, Customer CustList[],vector<Address>&AddList, int Length)
 {
     //Temporary strings & vectors used in parsing
@@ -122,7 +125,7 @@ void CustomerDataInput(string file, Customer CustList[],vector<Address>&AddList,
         AddList[i].zipCode= tempAdd[3]; 
     }
     
-       //Reading in addresses- fix so there is unique address if not in vector
+       //Reading in addresses
        vector<Address>::iterator ITERATOR = AddList.begin();
        for (int i = 0; i<Length; i++)
        { 
@@ -132,6 +135,7 @@ void CustomerDataInput(string file, Customer CustList[],vector<Address>&AddList,
     Filename.close();
 }
 
+//reading in and filling in product array
 void InventoryDataInput(string file,Product ProdList[],int Length)
 {
     //Temporary vectors & strings used in parsing
@@ -177,7 +181,7 @@ string generateOrderNum(){
     return oNum;
 }
 
-
+//selection sort used arrange array and vector in ascending order
 void selectionSort(Customer array[],vector<Address>&AddList, int Length)
 {
     int start, minIndex;
@@ -235,42 +239,175 @@ void selectionSort(Customer array[],vector<Address>&AddList, int Length)
         AddList[start].state = minState;
         AddList[start].zipCode = minZip;
     }  
+}
+
+//binary search used finding customer number
+int binarySearch(Customer array[], int low, int high, string key) 
+{
+    while (low <= high) 
+    { 
+	    int mid = low + (high - low) / 2; 
+	  
+	        // Check if searchVAl is equal to mid 
+	        if (array[mid].customerNum == key) 
+	            return mid; 
+	  
+	        // If searchVal greater, ignore left half 
+	        if (array[mid].customerNum < key) 
+	            low = mid + 1; 
+	  
+	        // If searchVal is smaller, ignore right half 
+	        else
+	            high = mid - 1; 
+     }
+    
+    return -1;
 } 
 
-void orderSummary()
+//linear search used in finding customer name
+int linearSearch(Customer array[], int size, string name)
+{
+    int index = 0;
+    int position = -1;
+    bool found = false;
+    
+    while (index < size && !found)
+    {
+        if (array[index].customerName == name)
+        {
+            found = true;
+            position = index;
+        }
+        index++;
+    }
+    
+    return position;
+}
+
+//linear search used to find items in inventory/product array
+int linearSearchProduct(Product array[], int size, int name)
+{
+    int index = 0;
+    int position = -1;
+    bool found = false;
+    
+    while (index < size && !found)
+    {
+        if (array[index].itemNo == name)
+        {
+            found = true;
+            position = index;
+        }
+        index++;
+    }
+    
+    return position;
+}
+
+//used to add items to cart and check credit
+void creditChecker(Customer array[], int pos, Product Array[], int Size, vector<Cart>&shoppingList)
+{
+    //variables
+    int searchItem;
+    char response = 'y';
+    int i=0, qty;
+    double sum;
+    
+    while (toupper(response) == 'Y')
+    {
+        cout << "Enter the item number: ";
+        cin >> searchItem;
+        int Found = linearSearchProduct(Array,Size,searchItem); 
+    
+        while (Found == -1)
+        {
+            cout << "Invalid item number. Please enter a valid number: ";
+            cin >> searchItem;
+            Found = linearSearchProduct(Array,Size,searchItem);     
+        }
+    
+        cout << "Enter the quantity: ";
+        cin >> qty;
+        while (qty < 0)
+        {
+            cout << "quantity cannot be less than zero. Enter a valid quantity: ";
+            cin >> qty;
+        }
+        
+        
+        sum = (qty * Array[Found].price);
+        double remainder = array[pos].lineOfCredit-sum;
+        
+        //only adds item to the cart if there is credit left
+        if (remainder >= 0)
+        {
+            shoppingList.push_back(Cart()); //pushes back the entries to fill the vector of structs
+            shoppingList[i].item = Array[Found];
+            shoppingList[i].quantity = qty;
+            shoppingList[i].total = sum;
+            i++; 
+            cout << "Enter another item? Enter 'Y' to add another item or 'N' to quit and print summary: ";
+            cin >> response;
+            while (toupper(response)!= 'Y' && toupper(response) != 'N')
+            {
+                cout << "Invalid reponse. Please enter 'Y' or 'N': ";
+                cin >> response;
+            }
+        }
+        
+        else
+        {
+          cout << "Quantity exceeded credit. Item was not added to cart"<<endl;
+          break;
+        }
+            
+    }
+
+}
+
+//used to print receipt
+void orderSummary(string name, Customer array[],vector<Address>&AddList, int pos)
 {
     //opening the file to write
     ofstream FileHandle;
     string orderNum = generateOrderNum();
     FileHandle.open(orderNum.c_str());
     
+    double cost, remaining;
+    
     FileHandle<< string(60,'-') << endl << "B2B Shopping Cart" << endl << string(60,'-') << endl;
-    FileHandle << "\nOrder Number: " << orderNum << "\nAssociate: " << endl;
-    FileHandle << "Customer Number: \nCustomer: \nAddress: "<<endl;
-    //fill in the remainding
-    //
+    FileHandle << "\nOrder Number: " << orderNum << "\nAssociate: " << name << endl;
+    FileHandle << "Customer Number: " << array[pos].customerNum << "\nCustomer: " << array[pos].customerName<<endl;
+    FileHandle << "Address: " << AddList[pos].streetAddress << " |\n" << AddList[pos].city << "," << AddList[pos].state
+    << AddList[pos].zipCode << endl << endl << endl;
     
     FileHandle << string(60,'-') << endl << setw(20) << left << "Item No" << setw(20) << left<< "Description" << setw(15)
         << left << "Qty" << setw(5) << "Total" << endl << string(60,'-') << endl;
     
     
-   /* for (int i = 0; i < num; i++) //prints the number of items
+    for (int i = 0; i < ShoppingCart.size(); i++) //prints the number of items
     {
-      cout << setw(20) << left << //insertItem << setw(10) << left << insertItem << setw(4) << insertItem<< endl;  
-    }*/
+      FileHandle << setw(20) << left << ShoppingCart[i].item.itemNo << " " << ShoppingCart[i].item.description <<
+          " " << ShoppingCart[i].quantity << " " << ShoppingCart[i].total << endl;
+        
+        cost += ShoppingCart[i].total;
+    }
     
-    FileHandle << string(60,'-') << endl << setw(20) << left << "Total "<<endl << string(60,'-') << endl;
-    FileHandle << setw(20) << left << "Remaining Credit " << endl;
+    remaining = array[pos].lineOfCredit-cost;
+    
+    
+    FileHandle << string(60,'-') << endl << setw(20) << left << "Total "<<cost << string(60,'-') << endl;
+    FileHandle << setw(20) << left << "Remaining Credit " <<remaining<< endl;
     
 }
 
-
-void menu()
+//menu used to find items, fill cart, etc..
+void menu(Customer array[],Product Array[], vector<Address>&vector,int &size)
 {
     //variables to enter
     char response;
-    string nameSearch, userName;
-    int numSearch;
+    string nameSearch, userName, numSearch;
+    int found;
     
     //prompt-issue with entering name during second iteration
     cout << "Welcome to the B2B Shopping Cart! " << endl << "Please enter your name: ";
@@ -278,41 +415,64 @@ void menu()
     cout << "Hello " << userName << ". If you are searching by name enter 'A' or if you are searching by number enter 'B'" << endl;
     cout << "A or B? : ";
     cin >> response;
+    cin.ignore();
     
     //Error checking
     while (toupper(response) != 'A' && toupper(response) != 'B')
     {
         cout << "Invalid response. Please enter either A or B: ";
         cin >> response;
+        cin.ignore();
     }
     
+    //searching by name
     if (toupper(response) == 'A')
     {
         cout << "Enter the customer name: ";
-        cin >> nameSearch;
-        //call linear search
+        getline(cin,nameSearch); 
+        found = linearSearch(array,size, nameSearch);
+        
+        while (found == -1)
+        {
+            cout << "Invalid input. Please enter a valid customer name: ";
+            getline(cin,nameSearch); 
+            found = linearSearch(array,size, nameSearch); 
+        } 
     }
     
+    //searching by number
     else
     {
         cout << "Enter the customer number: ";
         cin >> numSearch;
-        //call binary search
+        found = binarySearch(array,0,size,numSearch);
+        
+        while (found == -1)
+        {
+           cout << "Invalid input. Please enter a valid customer number: ";
+           cin >> numSearch;
+           found = binarySearch(array,0,size,numSearch);
+        }
     }
     
     //appropriate functions to check credit
-    orderSummary();
+    creditChecker(array,found,Array,(size-1),ShoppingCart);
+  
+    //printing final result
+    orderSummary(userName,array,vector,found);
     
     cout << "Would you like to search for another customer? Enter Y (yes) or N (no): ";
     cin >> response;
+    cin.ignore();
     while (toupper(response) != 'Y' && toupper(response) != 'N')
     {
         cout << "Invalid response. Please enter either Y or N: ";
         cin >> response;
+        cin.ignore();
     }
     
     if (toupper(response) == 'Y')
-        menu();
+        menu(array,Array,vector,size);
     
     else
         exit(0);   
