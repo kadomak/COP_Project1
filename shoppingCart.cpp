@@ -12,6 +12,7 @@
  * 
  **************************************************************/
 
+//fix
 #include <iostream>
 #include <fstream>
 #include <ctime>
@@ -106,7 +107,7 @@ void CustomerDataInput(string file, Customer CustList[],vector<Address>&AddList,
     //Opening the file
     ifstream Filename;
     Filename.open(file.c_str());
-    
+   
     //Reading in the customer data
     for (int i= 0; i < Length; i++)
     {
@@ -125,13 +126,13 @@ void CustomerDataInput(string file, Customer CustList[],vector<Address>&AddList,
         AddList[i].zipCode= tempAdd[3]; 
     }
     
-       //Reading in addresses
+       //Reading in addresses- fix this so only unique addresses are added
        vector<Address>::iterator ITERATOR = AddList.begin();
        for (int i = 0; i<Length; i++)
        { 
            CustList[i].corperateAddress = &(*(ITERATOR+i));      
        } 
-    
+   
     Filename.close();
 }
 
@@ -279,8 +280,7 @@ int linearSearch(Customer array[], int size, string name)
             position = index;
         }
         index++;
-    }
-    
+    } 
     return position;
 }
 
@@ -308,12 +308,21 @@ int linearSearchProduct(Product array[], int size, int name)
 void creditChecker(Customer array[], int pos, Product Array[], int Size, vector<Cart>&shoppingList)
 {
     //variables
-    int searchItem;
+    int searchItem, amount;
     char response = 'y';
     int i=0, qty;
     double sum;
+    int increment = 0;
     
-    while (toupper(response) == 'Y')
+    cout << "How many items do you want to enter? ";
+    cin >> amount;
+    while (amount <= 0)
+    {
+        cout << "Cannot enter less than zero items. Please enter a valid number: ";
+        cin >> amount;
+    }
+    
+    do
     {
         cout << "Enter the item number: ";
         cin >> searchItem;
@@ -330,7 +339,7 @@ void creditChecker(Customer array[], int pos, Product Array[], int Size, vector<
         cin >> qty;
         while (qty < 0)
         {
-            cout << "quantity cannot be less than zero. Enter a valid quantity: ";
+            cout << "Quantity cannot be less than zero. Enter a valid quantity: ";
             cin >> qty;
         }
         
@@ -346,23 +355,17 @@ void creditChecker(Customer array[], int pos, Product Array[], int Size, vector<
             shoppingList[i].quantity = qty;
             shoppingList[i].total = sum;
             i++; 
-            cout << "Enter another item? Enter 'Y' to add another item or 'N' to quit and print summary: ";
-            cin >> response;
-            while (toupper(response)!= 'Y' && toupper(response) != 'N')
-            {
-                cout << "Invalid reponse. Please enter 'Y' or 'N': ";
-                cin >> response;
-            }
         }
         
         else
         {
           cout << "Quantity exceeded credit. Item was not added to cart"<<endl;
           break;
-        }
-            
-    }
-
+        } 
+        
+        increment++;
+        
+    } while (increment <amount);
 }
 
 //used to print receipt
@@ -375,29 +378,28 @@ void orderSummary(string name, Customer array[],vector<Address>&AddList, int pos
     
     double cost, remaining;
     
-    FileHandle<< string(60,'-') << endl << "B2B Shopping Cart" << endl << string(60,'-') << endl;
+    FileHandle<< string(65,'-') << endl << "B2B Shopping Cart" << endl << string(65,'-') << endl;
     FileHandle << "\nOrder Number: " << orderNum << "\nAssociate: " << name << endl;
     FileHandle << "Customer Number: " << array[pos].customerNum << "\nCustomer: " << array[pos].customerName<<endl;
     FileHandle << "Address: " << AddList[pos].streetAddress << " |\n" << AddList[pos].city << "," << AddList[pos].state
     << AddList[pos].zipCode << endl << endl << endl;
     
-    FileHandle << string(60,'-') << endl << setw(20) << left << "Item No" << setw(20) << left<< "Description" << setw(15)
-        << left << "Qty" << setw(5) << "Total" << endl << string(60,'-') << endl;
+    FileHandle << string(65,'-') << endl << setw(20) << left << "Item No" << setw(25) << left<< "Description" << setw(10)
+        << left << "Qty" << setw(5) << "Total" << endl << string(65,'-') << endl;
     
     
     for (int i = 0; i < ShoppingCart.size(); i++) //prints the number of items
     {
-      FileHandle << setw(20) << left << ShoppingCart[i].item.itemNo << " " << ShoppingCart[i].item.description <<
-          " " << ShoppingCart[i].quantity << " " << ShoppingCart[i].total << endl;
+      FileHandle << setw(15) << left << ShoppingCart[i].item.itemNo << setw(30) << left << ShoppingCart[i].item.description << left << setw(10)
+        << ShoppingCart[i].quantity << fixed << setprecision(2)<< "$" << ShoppingCart[i].total << endl;
         
         cost += ShoppingCart[i].total;
     }
     
     remaining = array[pos].lineOfCredit-cost;
     
-    
-    FileHandle << string(60,'-') << endl << setw(20) << left << "Total "<<cost << string(60,'-') << endl;
-    FileHandle << setw(20) << left << "Remaining Credit " <<remaining<< endl;
+    FileHandle << string(65,'-') << endl << setw(55) << left << "Total "<< fixed << setprecision(2)<< "$" << cost << endl << string(65,'-') << endl;
+    FileHandle << setw(55) << left << "Remaining Credit " << fixed << setprecision(2) << "$"<< remaining<< endl;
     
 }
 
@@ -410,9 +412,14 @@ void menu(Customer array[],Product Array[], vector<Address>&vector,int &size)
     int found;
     
     //prompt-issue with entering name during second iteration
-    cout << "Welcome to the B2B Shopping Cart! " << endl << "Please enter your name: ";
+    cout << string(65,'-') << endl;
+    cout << "Welcome to the B2B Shopping Cart! " << endl << endl;
+    cout << "This program allows a buyer to select items to add to their cart." << endl;
+    cout << "A customer can be found by their ID number or their name. \nBe careful not to exceed the alotted credit." <<
+    endl << "Please enter your name to begin." << endl << string(65,'-') << endl;
+    cout << "Your name: ";
     getline(cin, userName);
-    cout << "Hello " << userName << ". If you are searching by name enter 'A' or if you are searching by number enter 'B'" << endl;
+    cout << "\nHello " << userName << ". If you are searching by name enter 'A'. \nEnter 'B' to search by number" << endl;
     cout << "A or B? : ";
     cin >> response;
     cin.ignore();
@@ -459,23 +466,5 @@ void menu(Customer array[],Product Array[], vector<Address>&vector,int &size)
     creditChecker(array,found,Array,(size-1),ShoppingCart);
   
     //printing final result
-    orderSummary(userName,array,vector,found);
-    
-    cout << "Would you like to search for another customer? Enter Y (yes) or N (no): ";
-    cin >> response;
-    cin.ignore();
-    while (toupper(response) != 'Y' && toupper(response) != 'N')
-    {
-        cout << "Invalid response. Please enter either Y or N: ";
-        cin >> response;
-        cin.ignore();
-    }
-    
-    if (toupper(response) == 'Y')
-        menu(array,Array,vector,size);
-    
-    else
-        exit(0);   
+    orderSummary(userName,array,vector,found);   
 }
-
-
