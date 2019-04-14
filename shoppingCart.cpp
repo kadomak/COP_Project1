@@ -7,12 +7,12 @@
                   Kierra Howard
                   Vanessa Chery
                   Kenneth Brown
- * Date Completed:
+ * Date Completed: 4/14/19
  * Filename: shoppingCart.cpp
  * 
  **************************************************************/
 
-//
+//Preprocessing directives
 #include <iostream>
 #include <fstream>
 #include <ctime>
